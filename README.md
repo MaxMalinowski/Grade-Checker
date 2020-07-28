@@ -1,2 +1,2 @@
 # Grade-Checker
-Check wether your grades updated in Primuss!
+Check whether your grades updated in Primuss!
