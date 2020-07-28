@@ -10,18 +10,62 @@ def init():
     if not os.path.exists("./data.json"):
         # if data file does not exist, ask for credentials and create one (only first time) 
         cred = dict()
-        cred["username"] = input("Please enter your primuss username: ")
-        cred["password"] = input("Please enter your primuss password: ")
+        cred["credentials"] = dict()
+        cred["grades"] = dict()
+        cred["credentials"]["username"] = input("Please enter your primuss username: ")
+        cred["credentials"]["password"] = input("Please enter your primuss password: ")
         with open("data.json", "w") as json_file:
-            json.dump(cred, json_file)
+            json.dump(cred, json_file, indent=4, sort_keys=True)
 
     # get credentials form data.json file
-    with open("data.json") as json_file:
+    with open("./data.json") as json_file:
         data = json.load(json_file)
-        primuss_username = data["username"]
-        primuss_password = data["password"]
+        primuss_username = data["credentials"]["username"]
+        primuss_password = data["credentials"]["password"]
 
     return primuss_username, primuss_password
+
+
+def parse(html_table):
+    # Parse html table in to a nice dict to work with
+    rows = html_table.split('<tr')
+    i = 0
+    tmp = dict()
+    for e in rows:
+        tmp[i] = e.split('<td')
+        i = i + 1
+
+    results = dict()
+    for key in tmp:
+        if len(tmp[key]) == 8:
+            new_key = tmp[key][3].split('<')[0][1:]
+            new_grade = tmp[key][6]
+            results[new_key] = new_grade.split('<b>')[1].split('</b>')[0]
+
+    return results
+
+def check(results):
+    # check whether the grades where updated or not
+    with open("data.json", "r+") as json_file:
+        data = json.load(json_file)
+        update = False
+        if len(data["grades"]) > 0:
+            print("checking....")
+            for subject in data["grades"]:
+                if results[subject] != data["grades"][subject]:
+                    update = True
+                    break
+        for subject in results:
+            data["grades"][subject] = results[subject]
+        json_file.seek(0)
+        json.dump(data, json_file, indent=4, sort_keys=True)
+        json_file.truncate()
+    return update
+
+def notify():
+    # send an email to the user so he can be happy (... or sad)
+    # to be done
+    return True
 
 
 def main():
@@ -55,24 +99,14 @@ def main():
     new_grades = browser.find_element_by_xpath('//*[@id="content-body"]/table[2]/tbody[2]').get_attribute('innerHTML')
 
     # Parse grades from table
-    rows = new_grades.split('<tr')
-    i = 0
-    tmp = dict()
-    for e in rows:
-        tmp[i] = e.split('<td')
-        i = i + 1
+    results = parse(new_grades)
 
-    results = dict()
-    for key in tmp:
-        if len(tmp[key]) == 8:
-            new_key = tmp[key][3].split('<')[0][1:]
-            new_grade = tmp[key][6]
-            results[new_key] = new_grade.split('<b>')[1].split('</b>')[0]
+    # check for updates
+    update = check(results)
 
-    # print grades
-    for key in results:
-        print(str(key) + ": " + results[key])
-        print("\n")
+    # If grades were updated, send email
+    if update:
+        notify()
 
     browser.close()
 
