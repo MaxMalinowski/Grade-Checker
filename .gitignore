@@ -354,3 +354,6 @@ data.json
 
 # log folder of cronjob
 log/
+
+# virtual environment folder
+.venv/
