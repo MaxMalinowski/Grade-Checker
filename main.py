@@ -115,6 +115,7 @@ def main():
 
     # Get to grad announcement page
     open_menu = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div/div[1]/button')
+    open_menu.click()
     my_exams = browser.find_element_by_xpath('//*[@id="nav-prim"]/div/ul/li[4]/a')
     my_exams.click()
     my_grades = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[1]/div[2]/form/input[6]')
