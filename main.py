@@ -1,4 +1,5 @@
 import time
+import pathlib
 import os
 import json
 import smtplib
@@ -11,7 +12,7 @@ from selenium.webdriver import Chrome
 def init():
     os.chdir('/Users/Max/Programming/Grade-Checker/')
     # Get credentials
-    if not os.path.exists("./data.json"):
+    if not os.path.exists(str(pathlib.Path().absolute()) + "/data.json"):
         # if data file does not exist, ask for credentials and create one (only first time) 
         cred = dict()
         cred["credentials"] = dict()
@@ -22,11 +23,11 @@ def init():
         cred["mail"]["address"] = input("Please enter your gmail address from which emails gonna be send to you: ")
         cred["mail"]["password"] = input("Please enter your gmail password: ")
 
-        with open("data.json", "w") as json_file:
+        with open("./data.json", "w") as json_file:
             json.dump(cred, json_file, indent=4, sort_keys=True)
 
     # get credentials form data.json file
-    with open("./data.json") as json_file:
+    with open(str(pathlib.Path().absolute()) + "/data.json") as json_file:
         data = json.load(json_file)
         primuss_username = data["credentials"]["username"]
         primuss_password = data["credentials"]["password"]
@@ -55,7 +56,7 @@ def parse(html_table):
 
 def check(results):
     # check whether the grades where updated or not
-    with open("data.json", "r+") as json_file:
+    with open(str(pathlib.Path().absolute()) + "/data.json", "r+") as json_file:
         data = json.load(json_file)
         update = False
         if len(data["grades"]) > 0:
@@ -75,7 +76,7 @@ def notify():
     # send an email to the user so he can be happy (... or sad)
     text = 'Your grades have changed! Check them out!\n\n'
 
-    with open("data.json", "r") as json_file:
+    with open(str(pathlib.Path().absolute()) + "/data.json", "r") as json_file:
         data = json.load(json_file)
         for subject in data["grades"]:
             text = text + subject + ":\n\t--> " + str(data["grades"][subject]) + "\n\n"
