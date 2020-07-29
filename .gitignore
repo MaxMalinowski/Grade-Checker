@@ -351,3 +351,6 @@ MigrationBackup/
 
 # data folder with credentials
 data.json
+
+# log folder of cronjob
+log/

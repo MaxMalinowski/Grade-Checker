@@ -1,19 +1,27 @@
 import time
 import os
 import json
+import smtplib
+import ssl
+from email.message import EmailMessage
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver import Chrome
 
 
 def init():
+    os.chdir('/Users/Max/Programming/Grade-Checker/')
     # Get credentials
     if not os.path.exists("./data.json"):
         # if data file does not exist, ask for credentials and create one (only first time) 
         cred = dict()
         cred["credentials"] = dict()
         cred["grades"] = dict()
+        cred["mail"] = dict()
         cred["credentials"]["username"] = input("Please enter your primuss username: ")
         cred["credentials"]["password"] = input("Please enter your primuss password: ")
+        cred["mail"]["address"] = input("Please enter your gmail address from which emails gonna be send to you: ")
+        cred["mail"]["password"] = input("Please enter your gmail password: ")
+
         with open("data.json", "w") as json_file:
             json.dump(cred, json_file, indent=4, sort_keys=True)
 
@@ -36,10 +44,11 @@ def parse(html_table):
         i = i + 1
 
     results = dict()
+    special_char_map = {ord('ä'):'ae', ord('ü'):'ue', ord('ö'):'oe', ord('ß'):'ss'}
     for key in tmp:
         if len(tmp[key]) == 8:
-            new_key = tmp[key][3].split('<')[0][1:]
-            new_grade = tmp[key][6]
+            new_key = tmp[key][3].split('<')[0][1:].translate(special_char_map)
+            new_grade = tmp[key][6].translate(special_char_map)
             results[new_key] = new_grade.split('<b>')[1].split('</b>')[0]
 
     return results
@@ -64,9 +73,23 @@ def check(results):
 
 def notify():
     # send an email to the user so he can be happy (... or sad)
-    # to be done
-    return True
+    text = 'Your grades have changed! Check them out!\n\n'
 
+    with open("data.json", "r") as json_file:
+        data = json.load(json_file)
+        for subject in data["grades"]:
+            text = text + subject + ":\n\t--> " + str(data["grades"][subject]) + "\n\n"
+
+        msg = EmailMessage()
+        msg.set_content(text)
+        msg['Subject'] = 'New Grades!'
+        msg['From'] = "Your Friendy Gr(e)at Bot <" + data["mail"]["address"] + ">"
+        msg['To'] = data["credentials"]["username"] 
+
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls(context=ssl.create_default_context())
+            server.login(data["mail"]["address"], data["mail"]["password"])
+            server.sendmail(data["mail"]["address"], data["credentials"]["username"]+"@thi.de", msg.as_string())
 
 def main():
     # setup
@@ -109,6 +132,7 @@ def main():
 
     # If grades were updated, send email
     if update:
+        print("New Grades!!")
         notify()
 
     browser.close()
