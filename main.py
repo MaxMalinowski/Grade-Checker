@@ -73,7 +73,10 @@ def main():
     primuss_username, primuss_password = init()
 
     # Start browser
-    browser = Chrome()
+    chrome_options = Options()  
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--window-size=1920x1080")  
+    browser = Chrome(options=chrome_options)
     browser.get('https://www3.primuss.de/cgi-bin/login/index.pl?FH=fhin')
     
     # Login in
