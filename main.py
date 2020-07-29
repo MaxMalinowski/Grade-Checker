@@ -10,7 +10,6 @@ from selenium.webdriver import Chrome
 
 
 def init():
-    os.chdir('/Users/Max/Programming/Grade-Checker/')
     # Get credentials
     if not os.path.exists(str(pathlib.Path().absolute()) + "/data.json"):
         # if data file does not exist, ask for credentials and create one (only first time) 
@@ -92,14 +91,13 @@ def notify():
             server.login(data["mail"]["address"], data["mail"]["password"])
             server.sendmail(data["mail"]["address"], data["credentials"]["username"]+"@thi.de", msg.as_string())
 
-def main():
+def main(): 
     # setup
     primuss_username, primuss_password = init()
 
     # Start browser
     chrome_options = Options()  
     chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--window-size=1920x1080")  
     browser = Chrome(options=chrome_options)
     browser.get('https://www3.primuss.de/cgi-bin/login/index.pl?FH=fhin')
     
@@ -116,6 +114,7 @@ def main():
     button.click()
 
     # Get to grad announcement page
+    open_menu = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div/div[1]/button')
     my_exams = browser.find_element_by_xpath('//*[@id="nav-prim"]/div/ul/li[4]/a')
     my_exams.click()
     my_grades = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[1]/div[2]/form/input[6]')
