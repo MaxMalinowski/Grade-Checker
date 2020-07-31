@@ -116,11 +116,13 @@ def main():
     # Get to grad announcement page
     open_menu = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div/div[1]/button')
     open_menu.click()
+    time.sleep(2)
     my_exams = browser.find_element_by_xpath('//*[@id="nav-prim"]/div/ul/li[4]/a')
     my_exams.click()
+    time.sleep(2)
     my_grades = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[1]/div[2]/form/input[6]')
     my_grades.click()
-    time.sleep(5)
+    time.sleep(2)
 
     # Get the current grades
     new_grades = browser.find_element_by_xpath('//*[@id="content-body"]/table[2]/tbody[2]').get_attribute('innerHTML')
