@@ -76,9 +76,7 @@ def check(results):
             data = json.load(json_file)
 
             logging.info("Checking for new grades")
-            if len(data["grades"]) < 0:
-                update = True
-            else:
+            if len(data["grades"]) > 0:
                 for subject in data["grades"]:
                     if results[subject] != data["grades"][subject]:
                         update = True

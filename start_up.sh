@@ -17,6 +17,7 @@ pip3 install setuptools;
 pip3 install .;
 python3 main.py;
 
-read -r "Enter time scheme of grade-checker cronjob (minute hour day month weakday): " timescheme
+echo -n "Enter time scheme of grade-checker cronjob (minute hour day month weakday): "
+read timescheme
 
 crontab -l | { cat; echo "$timescheme cd $PWD && $(which python3) $PWD/main.py"; } | crontab -
