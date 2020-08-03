@@ -179,7 +179,7 @@ def main():
 
     finally:
         browser.close()
-        logging.info("Browser closed. Exiting grade Checker. \n\n")
+        logging.info("Browser closed. Exiting grade Checker.\n\n")
 
 
 if __name__ == '__main__':
