@@ -125,7 +125,7 @@ def notify():
 
 def main():
     # Set up logging
-    logging.basicConfig(filename='grade-checker.log', format='%(asctime)s - %(levelname)s ==> %(message)s', level=logging.DEBUG)
+    logging.basicConfig(filename='grade-checker.log', format='%(asctime)s - %(levelname)s ==> %(message)s', level=logging.INFO)
     logging.info("Grade Checker started")
 
     # setup
