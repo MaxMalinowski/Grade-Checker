@@ -173,6 +173,8 @@ def main():
         if update:
             logging.info("New grades are available")
             notify()
+        else:
+            logging.info("No new grades available")
 
     except Exception as e:
         logging.error("Exception while retrieving grades from primuss: " + str(e))
