@@ -4,6 +4,7 @@ import os
 import json
 import smtplib
 import ssl
+import logging
 from email.message import EmailMessage
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver import Chrome
@@ -13,6 +14,7 @@ def init():
     # Get credentials
     if not os.path.exists(str(pathlib.Path().absolute()) + "/data.json"):
         # if data file does not exist, ask for credentials and create one (only first time)
+        logging.info("no data.json file found. Createing new one")
         cred = dict()
         cred["credentials"] = dict()
         cred["grades"] = dict()
@@ -33,7 +35,7 @@ def init():
             primuss_password = data["credentials"]["password"]
 
     except Exception as e:
-        print(e)
+        logging.error("Exception while getting primuss credentials form data.json: " + str(e))
 
     finally:
         return primuss_username, primuss_password
@@ -44,6 +46,7 @@ def parse(html_table):
     results = dict()
     try:
         # Parse html table in to a nice dict to work with
+        logging.info("parsing grade table into dict")
         rows = html_table.split('<tr')
         i = 0
 
@@ -59,7 +62,7 @@ def parse(html_table):
                 results[new_key] = new_grade.split('<b>')[1].split('</b>')[0]
 
     except Exception as e:
-        print(e)
+        logging.error("Exception while parsing grades: " + str(e))
 
     finally:
         return results
@@ -72,11 +75,15 @@ def check(results):
         with open(str(pathlib.Path().absolute()) + "/data.json", "r+") as json_file:
             data = json.load(json_file)
 
-            if len(data["grades"]) > 0:
+            logging.info("Checking for new grades")
+            if len(data["grades"]) < 0:
+                update = True
+            else:
                 for subject in data["grades"]:
                     if results[subject] != data["grades"][subject]:
                         update = True
                         break
+            logging.info("Saving grades")
             for subject in results:
                 data["grades"][subject] = results[subject]
             json_file.seek(0)
@@ -84,7 +91,7 @@ def check(results):
             json_file.truncate()
 
     except Exception as e:
-        print(e)
+        logging.error("Exception while checking for new grades: " + str(e))
 
     finally:
         return update
@@ -92,6 +99,7 @@ def check(results):
 
 def notify():
     # send an email to the user so he can be happy (... or sad)
+    logging.info("Sending email with new grades")
     text = 'Your grades have changed! Check them out!\n\n'
 
     try:
@@ -103,7 +111,7 @@ def notify():
             msg = EmailMessage()
             msg.set_content(text)
             msg['Subject'] = 'New Grades!'
-            msg['From'] = "Your Friendly Gr(e)at Bot <" + data["mail"]["address"] + ">"
+            msg['From'] = "Your Friendly Bot <" + data["mail"]["address"] + ">"
             msg['To'] = data["credentials"]["username"]
 
             with smtplib.SMTP("smtp.gmail.com", 587) as server:
@@ -112,10 +120,14 @@ def notify():
                 server.sendmail(data["mail"]["address"], data["credentials"]["username"]+"@thi.de", msg.as_string())
 
     except Exception as e:
-        print(e)
+        logging.error("Exception while sending mail: " + str(e))
 
 
 def main():
+    # Set up logging
+    logging.basicConfig(filename='grade-checker.log', format='%(asctime)s - %(levelname)s ==> %(message)s', level=logging.DEBUG)
+    logging.info("Grade Checker started")
+
     # setup
     primuss_username, primuss_password = init()
 
@@ -125,6 +137,7 @@ def main():
     browser = Chrome(options=chrome_options)
     browser.implicitly_wait(10)
     browser.get('https://www3.primuss.de/cgi-bin/login/index.pl?FH=fhin')
+    logging.info("Browser created")
 
     try:
         # Login in
@@ -138,6 +151,7 @@ def main():
         password.send_keys(primuss_password)
         button = browser.find_element_by_xpath('/html/body/div/div[5]/form/div[4]/button')
         button.click()
+        logging.info("Successfully logged into primuss")
 
         # Get to grad announcement page
         open_menu = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div/div[1]/button')
@@ -149,6 +163,7 @@ def main():
 
         # Get the current grades
         new_grades = browser.find_element_by_xpath('//*[@id="content-body"]/table[2]/tbody[2]').get_attribute('innerHTML')
+        logging.info("Retrieved grades from primuss")
 
         # Parse grades from table
         results = parse(new_grades)
@@ -158,13 +173,15 @@ def main():
 
         # If grades were updated, send email
         if update:
+            logging.info("New grades are available")
             notify()
 
     except Exception as e:
-        print(e)
+        logging.error("Exception while retrieving grades from primuss: " + str(e))
 
     finally:
         browser.close()
+        logging.info("Browser closed. Exiting grade Checker. \n\n")
 
 
 if __name__ == '__main__':
